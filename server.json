@@ -1,0 +1,26 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "com.bonbrain.pantry-buddy/mcp",
+  "title": "Pantry Buddy",
+  "description": "Remote MCP for Pantry Buddy pantry, shopping lists, recipes, and saved receipts. Auth is a personal access key from the iOS app.",
+  "version": "1.0.0",
+  "websiteUrl": "https://github.com/bonbrainllc/pantry-buddy-mcp",
+  "repository": {
+    "url": "https://github.com/bonbrainllc/pantry-buddy-mcp",
+    "source": "github"
+  },
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://bonbrain-be-production.up.railway.app/mcp",
+      "headers": [
+        {
+          "name": "Authorization",
+          "description": "Bearer personal access key from Pantry Buddy Settings → AI connection (include pb_).",
+          "isRequired": true,
+          "isSecret": true
+        }
+      ]
+    }
+  ]
+}

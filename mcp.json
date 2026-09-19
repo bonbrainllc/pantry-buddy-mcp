@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "pantry-buddy": {
+      "url": "https://bonbrain-be-production.up.railway.app/mcp",
+      "headers": {
+        "Authorization": "Bearer pb_YOUR_KEY"
+      }
+    }
+  }
+}

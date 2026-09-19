@@ -1,0 +1,24 @@
+{
+  "name": "pantry-buddy-mcp",
+  "version": "1.0.0",
+  "private": false,
+  "description": "Thin stdio bridge to the Pantry Buddy production MCP. No app source, no secrets.",
+  "type": "module",
+  "bin": {
+    "pantry-buddy-mcp": "./bin/stdio.mjs"
+  },
+  "scripts": {
+    "mcp:stdio": "node bin/stdio.mjs"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bonbrainllc/pantry-buddy-mcp.git"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "name": "pantry-buddy",
+  "description": "Remote MCP for Pantry Buddy pantry, shopping lists, recipes, and saved receipts.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Bonbrain LLC",
+    "email": "info@bonbrain.com"
+  },
+  "homepage": "https://github.com/bonbrainllc/pantry-buddy-mcp",
+  "repository": "https://github.com/bonbrainllc/pantry-buddy-mcp",
+  "license": "MIT",
+  "keywords": ["mcp", "pantry", "shopping", "receipts", "remote"],
+  "variables": {
+    "type": "object",
+    "properties": {
+      "PANTRY_BUDDY_TOKEN": {
+        "type": "string",
+        "title": "Pantry Buddy API key",
+        "description": "Full Settings key, including pb_. Replace the entire pb_YOUR_KEY placeholder."
+      }
+    },
+    "required": ["PANTRY_BUDDY_TOKEN"]
+  },
+  "mcpServers": {
+    "pantry-buddy": {
+      "url": "https://bonbrain-be-production.up.railway.app/mcp",
+      "headers": {
+        "Authorization": "Bearer ${PANTRY_BUDDY_TOKEN}"
+      }
+    }
+  }
+}
