@@ -1,94 +1,97 @@
 # Pantry Buddy MCP
 
-Remote MCP for Pantry Buddy. Personal pantry, shopping lists, cookbook recipes, and **saved** receipts.
+<img src="assets/logo-400.png" alt="Pantry Buddy" width="96" align="right">
 
-This repository is the **public listing** for the remote MCP (docs, Cursor config, MIT license, optional stdio bridge). It is **not** the Pantry Buddy iOS app or backend. There are no production keys here.
+Ask your AI assistant about your kitchen: what's in stock, what expires soon, what to buy and what you spent on groceries.
 
-## Connect
+Pantry Buddy turns your grocery receipts into a live pantry. This repository documents its **remote MCP server**. It holds no server code and no keys: the server is hosted by Bonbrain LLC.
 
 | | |
 | --- | --- |
-| MCP URL | https://bonbrain-be-production.up.railway.app/mcp |
-| Transport | Streamable HTTP (`POST`) |
-| Auth | `Authorization: Bearer pb_YOUR_KEY` |
+| MCP URL | `https://mcp.bonbrain.com/mcp` |
+| Transport | Streamable HTTP |
+| Auth | OAuth 2.1 (authorization code + PKCE S256, dynamic client registration or client ID metadata document) |
+| Registry | [`com.bonbrain/pantry-buddy`](https://registry.modelcontextprotocol.io/v0/servers?search=com.bonbrain/pantry-buddy) in the official MCP Registry |
+| Docs | https://bonbrain.com/pantry-buddy/assistants |
+| Privacy | https://bonbrain.com/privacy-policy |
+| Support | info@bonbrain.com |
 
-Create the key in the Pantry Buddy iOS app: **Settings → AI connection**. The plaintext is shown once. Revoke or rotate from the same screen (rotate is `POST /api/auth/mcp-tokens/:id/rotate`). Pantry Buddy stores only a SHA-256 hash.
+## What you need
 
-`pb_YOUR_KEY` is a placeholder. Paste the full key, including the `pb_` prefix, over the entire placeholder. Do not commit a real key.
+- The Pantry Buddy iPhone app ([App Store](https://apps.apple.com/app/id6751549199)) and a Pantry Buddy account.
+- An MCP client that supports remote servers with OAuth (Claude, ChatGPT, Cursor, VS Code, Cline, Grok, Le Chat and others).
 
-## Cursor
+## How connecting works
 
-Copy [`mcp.json`](./mcp.json) into `~/.cursor/mcp.json` or the project `.cursor/mcp.json`:
+1. Add `https://mcp.bonbrain.com/mcp` as a remote MCP server (custom connector) in your assistant.
+2. Your assistant opens the Pantry Buddy sign-in page.
+3. In the app, open **Settings → AI connection → Connect an assistant** and type the 6-digit code it shows. The code is valid for 10 minutes and works once.
+4. You are connected. The connection appears in the app under Settings → AI connection, where you can revoke it at any time.
+
+Under the hood this is standard MCP authorization: the server answers `401` with `WWW-Authenticate: Bearer resource_metadata=…`, publishes [protected resource metadata](https://mcp.bonbrain.com/.well-known/oauth-protected-resource/mcp) and [authorization server metadata](https://mcp.bonbrain.com/.well-known/oauth-authorization-server), supports dynamic client registration (RFC 7591) and client ID metadata documents, requires PKCE S256 and returns `iss` on the authorization response (RFC 9207).
+
+## Client setup
+
+**Claude** (claude.ai, Desktop, mobile): Settings → Connectors → Add custom connector → URL `https://mcp.bonbrain.com/mcp`.
+
+**Claude Code**
+
+```bash
+claude mcp add --transport http pantry-buddy https://mcp.bonbrain.com/mcp
+```
+
+**ChatGPT**: Settings → Apps → Create (developer mode) → MCP server URL `https://mcp.bonbrain.com/mcp`, authentication OAuth.
+
+**Cursor / VS Code / Cline / Windsurf**: add the server by URL. Example [`mcp.json`](./mcp.json):
 
 ```json
 {
   "mcpServers": {
-    "pantry-buddy": {
-      "url": "https://bonbrain-be-production.up.railway.app/mcp",
-      "headers": {
-        "Authorization": "Bearer pb_YOUR_KEY"
-      }
-    }
+    "pantry-buddy": { "url": "https://mcp.bonbrain.com/mcp" }
   }
 }
 ```
 
-Cursor Marketplace listing needs this public repo. The publish form still requires a Cursor sign-in; this repo is the GitHub half of that submit.
-
-## Claude
-
-**Claude Code** (remote HTTP + Bearer works):
-
-```bash
-claude mcp add --transport http pantry-buddy https://bonbrain-be-production.up.railway.app/mcp \
-  --header "Authorization: Bearer pb_YOUR_KEY"
-```
-
-**Limitation:** Claude.ai / Cowork / Claude Desktop **Connectors** UI takes a URL plus optional OAuth client credentials and has no Bearer-header field, so v1 keys cannot be pasted there. Use Claude Code, or the stdio bridge below in `claude_desktop_config.json`.
-
-## Grok
-
-Grok supports remote MCP over Streaming HTTP.
-
-- **App:** [grok.com/connectors](https://grok.com/connectors) → New Connector → Custom → URL `https://bonbrain-be-production.up.railway.app/mcp` and Bearer `pb_YOUR_KEY`.
-- **CLI:** `grok mcp add --transport http pantry-buddy https://bonbrain-be-production.up.railway.app/mcp --header "Authorization: Bearer ${PANTRY_BUDDY_TOKEN}"`
-- **API:** Remote MCP tool with `server_url` and `authorization` (https://docs.x.ai/developers/tools/remote-mcp).
-
-## Stdio bridge
-
-Only if the client cannot send a remote HTTP URL (some local desktop configs). Requires Node 20+:
-
-```bash
-PANTRY_BUDDY_TOKEN=pb_YOUR_KEY npx -y github:bonbrainllc/pantry-buddy-mcp
-```
-
-Or `npm run mcp:stdio` after a local clone. This process forwards stdio to the production `/mcp` URL. It does not embed secrets.
+The client starts the OAuth sign-in the first time it calls the server.
 
 ## Tools
 
-Same user-scoped actions as the app (optional `pantryId` for a shared pantry you already belong to):
+All tools act only on the signed-in user's own pantry (or a shared pantry they belong to, via optional `pantryId`). No tool deletes data.
 
-| Tool | What it does |
-| --- | --- |
-| `list_pantry_items` | List inventory |
-| `add_pantry_item` | Add / restock an item |
-| `update_pantry_item` | Update an item (integer `productId`) |
-| `list_shopping_lists` | List lists |
-| `create_shopping_list` | Create a list |
-| `add_shopping_list_item` | Add a line |
-| `update_shopping_list_item` | Check off / edit a line |
-| `list_my_recipes` | Cookbook |
-| `search_ingredients` | Catalog search for recipe `ingredientId` |
-| `create_my_recipe` | Create a cookbook recipe |
-| `update_my_recipe` | Update a cookbook recipe |
-| `list_receipts` | Saved receipts (no image upload) |
-| `get_receipt` | One receipt + line items (no image bytes) |
+| Tool | What it does | Writes |
+| --- | --- | --- |
+| `list_pantry_items` | Pantry stock with quantities and expiry dates | |
+| `list_expiring_items` | Items expiring in the next 7 days plus ones that expired in the last 3 (both adjustable) | |
+| `add_pantry_item` | Add or restock an item | yes |
+| `update_pantry_item` | Edit an item | yes |
+| `mark_pantry_item_used` | "I finished the milk", "used half the spinach" | yes |
+| `list_shopping_lists` | Shopping lists and their items | |
+| `create_shopping_list` | New list | yes |
+| `add_shopping_list_item` | Add a line to a list | yes |
+| `add_to_shopping_list` | Add items by name, skipping what's already on the list | yes |
+| `update_shopping_list_item` | Check off or edit a line | yes |
+| `list_my_recipes` | Your cookbook | |
+| `search_ingredients` | Ingredient catalog (ids for recipes) | |
+| `create_my_recipe` | Save a recipe | yes |
+| `update_my_recipe` | Edit a recipe | yes |
+| `list_receipts` | Receipts scanned in the app: store, date, totals | |
+| `get_receipt` | One receipt with its line items | |
 
-There is no receipt-camera / image-scan tool.
+Every tool carries `readOnlyHint`, `destructiveHint` and `openWorldHint` annotations. Receipts are scanned in the iPhone app; there is no image upload tool.
 
-## Not in this repo
+## Example prompts
 
-- Pantry Buddy iOS source
-- Bonbrain backend source
-- Railway env
-- Real `pb_` keys
+- "What's in my pantry?"
+- "What expires this week?"
+- "Make a shopping list for tacos and skip what I already have."
+- "Add 2 gallons of milk to my pantry."
+- "Do I have eggs? If not, add them to my list."
+- "How much did I spend at Kroger this month?"
+
+## Privacy
+
+Pantry Buddy reads and writes only the signed-in user's pantry, lists, recipes and receipts through Bonbrain's own API. It handles no health data and shows no sponsored content. Full policy: https://bonbrain.com/privacy-policy
+
+## Not in this repository
+
+Server or app source code, deployment configuration and credentials. This repository is documentation only; all rights reserved by Bonbrain LLC.
