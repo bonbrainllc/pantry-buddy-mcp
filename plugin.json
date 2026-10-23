@@ -1,0 +1,10 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "pantry-buddy",
+  "version": "1.0.2",
+  "description": "Ask your assistant about your kitchen: pantry stock, expiring items, shopping lists, recipes and scanned grocery receipts. Remote MCP with OAuth sign-in.",
+  "author": { "name": "Bonbrain LLC", "email": "info@bonbrain.com", "url": "https://bonbrain.com" },
+  "homepage": "https://bonbrain.com/pantry-buddy/assistants",
+  "repository": "https://github.com/bonbrainllc/pantry-buddy-mcp",
+  "keywords": ["mcp", "pantry", "groceries", "shopping-list", "recipes", "receipts"]
+}
